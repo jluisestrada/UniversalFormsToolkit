@@ -481,16 +481,16 @@ namespace AutoGenerateForm.Uwp
                             !property.PropertyType.Equals(typeof(float)) &&
                             !property.PropertyType.Equals(typeof(double)) &&
                             !property.PropertyType.Equals(typeof(decimal)) &&
-                            !propertyType.Equals(typeof(Nullable<int>)) &&
-                            !propertyType.Equals(typeof(Nullable<float>)) &&
-                            !propertyType.Equals(typeof(Nullable<decimal>)) &&
-                            !propertyType.Equals(typeof(Nullable<double>)) &&
+                            !propertyType.Equals(typeof(int?)) &&
+                            !propertyType.Equals(typeof(float?)) &&
+                            !propertyType.Equals(typeof(decimal?)) &&
+                            !propertyType.Equals(typeof(double?)) &&
                             !property.PropertyType.Equals(typeof(DateTime)) &&
-                            !property.PropertyType.Equals(typeof(Nullable<DateTime>)) &&
+                            !property.PropertyType.Equals(typeof(DateTime?)) &&
                             !property.PropertyType.Equals(typeof(bool)) &&
-                            !propertyType.Equals(typeof(Nullable<bool>)) &&
+                            !propertyType.Equals(typeof(bool?)) &&
                             !property.PropertyType.Equals(typeof(TimeSpan)) &&
-                            !propertyType.Equals(typeof(Nullable<TimeSpan>)) &&
+                            !propertyType.Equals(typeof(TimeSpan?)) &&
                             (propertyType.GetTypeInfo().IsGenericType && tColl.IsAssignableFrom(propertyType.GetGenericTypeDefinition()) ||
                              propertyType.GetInterfaces().Any(x => x.GetTypeInfo().IsGenericType && x.GetGenericTypeDefinition() == tColl)) == false)
                         {
@@ -521,8 +521,8 @@ namespace AutoGenerateForm.Uwp
             var propertyType = property.PropertyType;
             if (propertyType.Equals(typeof(int)) ||
                 propertyType.Equals(typeof(long)) ||
-                propertyType.Equals(typeof(Nullable<int>)) ||
-                propertyType.Equals(typeof(Nullable<long>)))
+                propertyType.Equals(typeof(int?)) ||
+                propertyType.Equals(typeof(long?)))
             {
                 return dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                 {
@@ -563,9 +563,9 @@ namespace AutoGenerateForm.Uwp
             if (propertyType.Equals(typeof(float)) ||
                 propertyType.Equals(typeof(decimal)) ||
                 propertyType.Equals(typeof(double)) ||
-                propertyType.Equals(typeof(Nullable<double>)) ||
-                propertyType.Equals(typeof(Nullable<decimal>)) ||
-                propertyType.Equals(typeof(Nullable<float>))
+                propertyType.Equals(typeof(double?)) ||
+                propertyType.Equals(typeof(decimal?)) ||
+                propertyType.Equals(typeof(float?))
 
             )
             {
@@ -591,7 +591,7 @@ namespace AutoGenerateForm.Uwp
 
 
             }
-            if (propertyType.Equals(typeof(DateTime)) || propertyType.Equals(typeof(Nullable<DateTime>)))
+            if (propertyType.Equals(typeof(DateTime)) || propertyType.Equals(typeof(DateTime?)))
             {
 
                 return dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -601,7 +601,7 @@ namespace AutoGenerateForm.Uwp
 
             }
 
-            if (propertyType.Equals(typeof(bool)) || propertyType.Equals(typeof(Nullable<bool>)))
+            if (propertyType.Equals(typeof(bool)) || propertyType.Equals(typeof(bool?)))
             {
 
 
@@ -612,7 +612,7 @@ namespace AutoGenerateForm.Uwp
 
             }
 
-            if (propertyType.Equals(typeof(TimeSpan)) || propertyType.Equals(typeof(Nullable<TimeSpan>)))
+            if (propertyType.Equals(typeof(TimeSpan)) || propertyType.Equals(typeof(TimeSpan?)))
             {
 
                 return dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
