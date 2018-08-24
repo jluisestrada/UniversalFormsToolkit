@@ -108,6 +108,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <Compile Include="Fluent\PropertyBags\CollectionPropertyBag.cs" />
     <Compile Include="Fluent\CollectionPropertyConfiguration.cs" />
     <None Include="project.json" />
   </ItemGroup>
@@ -120,8 +121,12 @@
     <Compile Include="Controls\FieldContainerControl.cs" />
     <Compile Include="Fluent\AutoGenerateFormService.cs" />
     <Compile Include="Fluent\EntityConfiguration.cs" />
+    <Compile Include="Fluent\Helpers\ReflectionHelper.cs" />
+    <Compile Include="Fluent\NumericPropertyConfiguration.cs" />
+    <Compile Include="Fluent\PropertyBags\EntityBag.cs" />
+    <Compile Include="Fluent\PropertyBags\NumericPropertyBag.cs" />
+    <Compile Include="Fluent\PropertyBags\PropertyBag.cs" />
     <Compile Include="Fluent\PropertyConfiguration.cs" />
-    <Compile Include="Fluent\StringPropertyConfiguration.cs" />
     <Compile Include="ValidationSummary.xaml.cs">
       <DependentUpon>ValidationSummary.xaml</DependentUpon>
     </Compile>

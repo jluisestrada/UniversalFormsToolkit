@@ -1,14 +1,11 @@
-﻿using System;
+﻿using AutoGenerateForm.Uwp.Fluent;
+using System;
 using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace AutoGenerateForm.Uwp
 {
     public class AutoGenerateFormService
     {
-        
 
         private static AutoGenerateFormService _instance;
         private AutoGenerateFormService Instance
@@ -24,18 +21,32 @@ namespace AutoGenerateForm.Uwp
             }
         }
 
+        private Dictionary<Type, EntityBag> _entities;
+
         private AutoGenerateFormService()
         {
-
+            _entities = new Dictionary<Type, EntityBag>();
         }
 
         public static EntityConfiguration<T> ForEntity<T>()
             where T : class, new()
         {
-            var entity = new EntityConfiguration<T>();
+            var entity = TryAddEntity<T>();
             return entity;
         }
 
-        
+        private static EntityConfiguration<T> TryAddEntity<T>() where T : new()
+        {
+            var type = typeof(T);
+            if (_instance._entities.ContainsKey(type))
+            {
+                throw new ArgumentException($"Entity { type.Name } is already defined.");
+            }
+            var bag = new EntityBag();
+
+            _instance._entities.Add(type, bag);
+
+            return new EntityConfiguration<T>(bag);
+        }
     }
 }

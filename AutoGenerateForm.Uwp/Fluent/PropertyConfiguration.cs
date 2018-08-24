@@ -1,4 +1,5 @@
 ﻿using System;
+using AutoGenerateForm.Uwp.Fluent;
 
 namespace AutoGenerateForm.Uwp
 {
@@ -7,35 +8,46 @@ namespace AutoGenerateForm.Uwp
     public class PropertyConfiguration<T>
         where T : new()
     {
-        internal string DisplayAs { get; set; }
+        internal PropertyBag _bag;
 
-        internal int? WithOrder { get; set; }
+        internal PropertyConfiguration(PropertyBag bag)
+        {
+            _bag = bag;
+        }
 
-        internal Func<T, bool> VisibleWhen { get; set; }
+        internal PropertyConfiguration()
+        {
+
+        }
     }
-
-
 
     public static class PropertyConfigurationExtensions
     {
         public static PropertyConfiguration<T> DisplayAs<T>(this PropertyConfiguration<T> propertyConfig, string caption)
             where T: new()
         {
-            propertyConfig.DisplayAs = caption;
+            propertyConfig._bag.DisplayAs = caption;
             return propertyConfig;
         }
 
         public static PropertyConfiguration<T> WithOrder<T>(this PropertyConfiguration<T> propertyConfig, int order)
             where T :  new()
         {
-            propertyConfig.WithOrder = order;
+            propertyConfig._bag.WithOrder = order;
             return propertyConfig;
         }
 
         public static PropertyConfiguration<T> VisibleWhen<T>(this PropertyConfiguration<T> propertyConfig, Func<T, bool> func)
             where T :  new()
         {
-            propertyConfig.VisibleWhen = func;
+            propertyConfig._bag.VisibleWhen = func;
+            return propertyConfig;
+        }
+
+        public static PropertyConfiguration<T> Required<T>(this PropertyConfiguration<T> propertyConfig)
+            where T : new()
+        {
+            propertyConfig._bag.Required = true;
             return propertyConfig;
         }
     }

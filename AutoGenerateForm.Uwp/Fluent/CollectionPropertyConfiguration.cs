@@ -1,21 +1,18 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using AutoGenerateForm.Uwp.Fluent;
+using System;
 using System.Linq.Expressions;
 
 namespace AutoGenerateForm.Uwp
 {
-    public class CollectionPropertyConfiguration<T, TCollection>: PropertyConfiguration<T>
-        where T: new()
-        where TCollection: new()
+    public class CollectionPropertyConfiguration<T, TCollection> : PropertyConfiguration<T>
+        where T : new()
+        where TCollection : new()
     {
-        public CollectionPropertyConfiguration<T, TCollection> DisplayMember(Expression<Func<TCollection, object>> expression)
-        {
-            return this;
-        }
+        internal new CollectionPropertyBag _bag;
 
-        public CollectionPropertyConfiguration<T, TCollection> SelectedItem(Expression<Func<T, object>> expression)
+        internal CollectionPropertyConfiguration(PropertyBag bag): base()
         {
-            return this;
+            _bag = new CollectionPropertyBag(bag);
         }
     }
 
@@ -23,9 +20,9 @@ namespace AutoGenerateForm.Uwp
     {
         public static CollectionPropertyConfiguration<T, TCollection> DisplayAs<T, TCollection>(this CollectionPropertyConfiguration<T, TCollection> propertyConfig, string caption)
             where T : new()
-            where TCollection: new()
+            where TCollection : new()
         {
-            propertyConfig.DisplayAs = caption;
+            propertyConfig._bag.DisplayAs = caption;
             return propertyConfig;
         }
 
@@ -33,7 +30,7 @@ namespace AutoGenerateForm.Uwp
             where T : new()
             where TCollection : new()
         {
-            propertyConfig.WithOrder = order;
+            propertyConfig._bag.WithOrder = order;
             return propertyConfig;
         }
 
@@ -41,7 +38,22 @@ namespace AutoGenerateForm.Uwp
             where T : new()
             where TCollection : new()
         {
-            propertyConfig.VisibleWhen = func;
+            propertyConfig._bag.VisibleWhen = func;
+            return propertyConfig;
+        }
+
+        public static CollectionPropertyConfiguration<T, TCollection> DisplayMember<T, TCollection>(this CollectionPropertyConfiguration<T, TCollection> propertyConfig, Expression<Func<TCollection, object>> expression)
+             where T : new()
+            where TCollection : new()
+        {
+            return propertyConfig;
+        }
+
+        public static CollectionPropertyConfiguration<T, TCollection> SelectedItem<T, TCollection>(this CollectionPropertyConfiguration<T, TCollection> propertyConfig, Expression<Func<T, object>> expression)
+             where T : new()
+            where TCollection : new()
+        {
             return propertyConfig;
         }
     }
+}

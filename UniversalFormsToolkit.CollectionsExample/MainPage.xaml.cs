@@ -18,7 +18,11 @@ namespace UniversalFormsToolkit.CollectionsExample
             this.DataContext = new MainPageViewModel();
 
 
-            AutoGenerateFormService.ForEntity<Student>().Property(s => s.Name).DisplayAs("Primer Nombre").WithOrder(1).VisibleWhen(s => s.Name != null);
+            AutoGenerateFormService.ForEntity<Student>()
+                                   .Property(s => s.Name)
+                                   .DisplayAs("Primer Nombre")
+                                   .WithOrder(1)
+                                   .VisibleWhen(s => s.Name != null);
             AutoGenerateFormService.ForEntity<Group>()
                                    .CollectionProperty(g => g.Students)
                                    .DisplayMember(m => m.Name)

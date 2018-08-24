@@ -7,11 +7,11 @@ namespace UniversalFormsToolkit.CollectionsExample.Models
     {
         private ObservableCollection<Student> students;
 
-        [AutoGenerateProperty]
-        [DisplayMemberPathCollection("Name")]
-        [SelectedItemCollection("SelectedStudent")]
-        [Display("Students")]
-        [PropertyOrder(2)]
+        //[AutoGenerateProperty]
+        //[DisplayMemberPathCollection("Name")]
+        //[SelectedItemCollection("SelectedStudent")]
+        //[Display("Students")]
+        //[PropertyOrder(2)]
         public ObservableCollection<Student> Students
         {
             get { return students; }
@@ -37,9 +37,9 @@ namespace UniversalFormsToolkit.CollectionsExample.Models
 
         private string groupName;
 
-        [AutoGenerateProperty]
-        [Display("Group name")]
-        [PropertyOrder(1)]
+        //[AutoGenerateProperty]
+        //[Display("Group name")]
+        //[PropertyOrder(1)]
 
         public string GroupName
         {
