@@ -4,7 +4,7 @@
     {
 
 
-        public NumericPropertyBag(PropertyBag bag)
+        internal NumericPropertyBag(PropertyBag bag)
         {
             this.DisplayAs = bag.DisplayAs;
             this.Required = bag.Required;

@@ -8,7 +8,7 @@ namespace AutoGenerateForm.Uwp.Fluent
 {
     internal class StringPropertyBag: PropertyBag
     {
-        public StringPropertyBag(PropertyBag bag)
+        internal StringPropertyBag(PropertyBag bag)
         {
             this.DisplayAs = bag.DisplayAs;
             this.Required = bag.Required;
@@ -16,7 +16,8 @@ namespace AutoGenerateForm.Uwp.Fluent
             this.WithOrder = bag.WithOrder;
         }
 
-        public bool Multiline { get; set; }
-        public int Length { get; internal set; }
+        internal bool Multiline { get; set; }
+        internal int Length { get; set; }
+        internal (int MinWidth, int MinHeight, int MaxHeight, int MaxWidth) MinAndMaxSize { get; set; }
     }
 }

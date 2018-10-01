@@ -4,6 +4,10 @@ namespace AutoGenerateForm.Uwp.Fluent
 {
     internal class PropertyBag
     {
+        internal string Name { get; set; }
+
+        internal string NameFullPath { get; set; }
+
         internal string Subtitle { get;  set; }
 
         internal string EnabledWhenSource { get; set; }

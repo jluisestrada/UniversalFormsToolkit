@@ -4,7 +4,7 @@ namespace AutoGenerateForm.Uwp.Fluent
 {
     internal class CollectionPropertyBag : PropertyBag
     {
-        public CollectionPropertyBag(PropertyBag bag)
+        internal CollectionPropertyBag(PropertyBag bag)
         {
             this.DisplayAs = bag.DisplayAs;
             this.Required = bag.Required;

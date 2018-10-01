@@ -2,7 +2,7 @@
 {
     internal class TimeSpanPropertyBag: PropertyBag
     {
-        public TimeSpanPropertyBag(PropertyBag bag)
+        internal TimeSpanPropertyBag(PropertyBag bag)
         {
             this.DisplayAs = bag.DisplayAs;
             this.Required = bag.Required;

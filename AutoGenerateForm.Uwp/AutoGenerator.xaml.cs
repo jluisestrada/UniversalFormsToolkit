@@ -446,15 +446,6 @@ namespace AutoGenerateForm.Uwp
                 {
                     Type mainType = this.CurrentDataContext.GetType();
 
-                    //var props = new List<PropertyInfo>(mainType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                    //                                                         .Where(x => x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false).Any() &&
-                    //                                                                     x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false)
-                    //                                                                      .Cast<AutoGeneratePropertyAttribute>()
-                    //                                                                      .Any(z => z.AutoGenerate == true))
-                    //                                                         .ToList());
-
-                    //var orderedprops = GetOrderedProperties(props);
-
                     var entityBag = AutoGenerateFormService.Instance.GetConfigFromDataContext(this.CurrentDataContext);
 
                     await GenerateFormAsync(entityBag).ContinueWith(async completed =>
@@ -471,60 +462,64 @@ namespace AutoGenerateForm.Uwp
             }
         }
 
-        private async Task GenerateFormAsync(EntityBag entityBag, EntityBag parentEntityBag = null)
+        private async Task GenerateFormAsync(EntityBag entityBag)
         {
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
                 if (entityBag != null)
                 {
-                    foreach (var property in entityBag.Properties)
+                    foreach (var kvp in entityBag.Properties)
                     {
-                        //var tColl = typeof(ICollection<>);
-                        //var propertyType = property.Key.PropertyType;
+                        switch (kvp.Value)
+                        {
+                            case StringPropertyBag stringProperty:
+                                {
+                                    GenerateTextBox(kvp.Key, kvp.Value);
+                                    break;
+                                }
+                            case NumericPropertyBag numericProperty:
+                                {
+                                    GenerateNumericUpDown(kvp.Key, kvp.Value);
+                                    break;
+                                }
+                            case AutoSuggestionPropertyBag suggestionProperty:
+                                {
+                                    GenerateSuggestionsControl(kvp.Key, kvp.Value);
+                                    break;
+                                }
+                            case CollectionPropertyBag collectionProperty:
+                                {
+                                    GenerateComboBox(kvp.Key, kvp.Value);
+                                    break;
+                                }
+                            case DateTimePropertyBag dateTimeProperty:
+                                {
+                                    GenerateDatePicker(kvp.Key, kvp.Value);
+                                    break;
+                                }
+                            case BooleanPropertyBag booleanProperty:
+                                {
+                                    GenerateCheckBox(kvp.Key, kvp.Value);
+                                    break;
+                                }
+                            case TimeSpanPropertyBag timeSpanProperty:
+                                {
+                                    GenerateTimePicker(kvp.Key, kvp.Value);
+                                    break;
 
-                        //if (!propertyType.Equals(typeof(int)) &&
-                        //    !propertyType.Equals(typeof(string)) &&
-                        //    !propertyType.Equals(typeof(float)) &&
-                        //    !propertyType.Equals(typeof(double)) &&
-                        //    !propertyType.Equals(typeof(decimal)) &&
-                        //    !propertyType.Equals(typeof(int?)) &&
-                        //    !propertyType.Equals(typeof(float?)) &&
-                        //    !propertyType.Equals(typeof(decimal?)) &&
-                        //    !propertyType.Equals(typeof(double?)) &&
-                        //    !propertyType.Equals(typeof(DateTime)) &&
-                        //    !propertyType.Equals(typeof(DateTime?)) &&
-                        //    !propertyType.Equals(typeof(bool)) &&
-                        //    !propertyType.Equals(typeof(bool?)) &&
-                        //    !propertyType.Equals(typeof(TimeSpan)) &&
-                        //    !propertyType.Equals(typeof(TimeSpan?)) &&
-                        //    (propertyType.GetTypeInfo().IsGenericType && tColl.IsAssignableFrom(propertyType.GetGenericTypeDefinition()) ||
-                        //     propertyType.GetInterfaces().Any(x => x.GetTypeInfo().IsGenericType && x.GetGenericTypeDefinition() == tColl)) == false)
-                        //{
-                        //    //List<PropertyInfo> props = new List<PropertyInfo>(propertyType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                        //    //                                                              .Where(x => x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false).Any() &&
-                        //    //                                                                          x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false)
-                        //    //                                                                           .Cast<AutoGeneratePropertyAttribute>()
-                        //    //                                                                           .Any(z => z.AutoGenerate == true))
-                        //    //                                                              .ToList());
-
-                        //    //var orderedprops1 = GetOrderedProperties(props);
-
-                        //    var childEntityBag = AutoGenerateFormService.Instance.GetConfigFromDataContext(propertyType);
-
-                        //    await GenerateFormAsync(childEntityBag, parentEntityBag);
-                        //}
-                        //else
-                        //{
-
-                        await GenerateControls(property, parentProperty);
-                        //}
+                                }
+                            case EntityPropertyBag entityProperty:
+                                {
+                                    break;
+                                }
+                        }
                     }
                 }
 
             });
         }
 
-        private Task GenerateControls (PropertyInfo property, PropertyInfo parentProperty = null)
+        private Task GenerateControls(PropertyInfo property, PropertyInfo parentProperty = null)
         {
             var propertyType = property.PropertyType;
             if (propertyType.Equals(typeof(int)) ||
@@ -634,68 +629,46 @@ namespace AutoGenerateForm.Uwp
             return null;
         }
 
-        private void GenerateSuggestionsControl(PropertyInfo property, PropertyInfo parentProperty)
+        private void GenerateSuggestionsControl(AutoSuggestionPropertyBag propertyBag)
         {
-            AutoSuggestBox combo = new AutoSuggestBox();
-            TextBlock txterror = null;
+            AutoSuggestBox combo = new AutoSuggestBox()
+            {
+                Name = this.ConvertNamePathToControlName(propertyBag.CollectionSourcePropertyName)
+            };
+            TextBlock txterror = GenerateErrorField(combo.Name);
             var isSugggestionsAttribute = Helpers.AttributeHelper<IsSuggestionsEnabledAttribute>.GetAttributeValue(property);
 
-            //isSugggestionsAttribute.CollectionName Collection to show
-            // isSugggestionsAttribute.CollectionName  Display member path
-            var binding = new Windows.UI.Xaml.Data.Binding();
-            if (parentProperty != null)
+            var binding = new Binding
             {
-                binding.Path = new PropertyPath(parentProperty.Name + "." + isSugggestionsAttribute.CollectionName);
-                combo.Name = parentProperty.Name + "_" + isSugggestionsAttribute.CollectionName;
-                txterror = GenerateErrorField(combo.Name);
-            }
-
-
-            binding.Source = CurrentDataContext;
-            binding.Mode = BindingMode.TwoWay;
-            binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+                Path = new PropertyPath(propertyBag.CollectionSourcePropertyName),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
             combo.SetBinding(AutoSuggestBox.ItemsSourceProperty, binding);
 
 
-
-            var binding2 = new Windows.UI.Xaml.Data.Binding();
-
-            if (parentProperty != null)
+            var binding2 = new Binding()
             {
-                binding2.Path = new PropertyPath(parentProperty.Name + "." + property.Name);
-                binding2.Source = CurrentDataContext;
-                binding2.Mode = BindingMode.TwoWay;
-                binding2.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                // binding2.NotifyOnValidationError = true;
+                Path = new PropertyPath(propertyBag.NameFullPath),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
+            combo.SetBinding(AutoSuggestBox.TextProperty, binding2);
 
-                combo.SetBinding(AutoSuggestBox.TextProperty, binding2);
-
-            }
-
-
-            TextBlock label = new TextBlock();
-            var displayAttribute = Helpers.AttributeHelper<DisplayAttribute>.GetAttributeValue(property);
-            if (displayAttribute != null)
+            var label = new TextBlock()
             {
-                label.Text = displayAttribute.Label;
-            }
-            else
-            {
-                label.Text = property.Name;
-            }
+                Text = propertyBag.DisplayAs ?? propertyBag.Name
+            };
+
+
             object sub = null;
-            var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
-            if (subTitleAttribute != null)
+            if (!string.IsNullOrWhiteSpace(propertyBag.Subtitle))
             {
-                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-
+                sub = SubTitleTextBlock(propertyBag.Subtitle);
             }
-            //CheckIsVisible(combo, parentProperty, property);
-            //SetVisibilityBinding(label,combo);
-            //SetVisibilityBinding(txterror, combo);
-            //stackPanel.Children.Add(label);
-            //stackPanel.Children.Add(combo);
-            //stackPanel.Children.Add(txterror);
+
 
 
             var field = new Controls.FieldContainerControl();
@@ -708,95 +681,61 @@ namespace AutoGenerateForm.Uwp
             field.Stack.Children.Add(txterror);
             fields.Add(field);
 
-            CheckIsVisible(field, parentProperty, property);
+            //CheckIsVisible(field, parentProperty, property);
 
         }
 
-        private async void GenerateTimePicker(PropertyInfo property, PropertyInfo parentProperty)
+        private async void GenerateTimePicker(TimeSpanPropertyBag propertyBag)
         {
-            TimePicker num = new TimePicker();
+            TimePicker num = new TimePicker()
+            {
+                Name = this.ConvertNamePathToControlName(propertyBag.NameFullPath)
+            };
 
-            var minuteAttr = Helpers.AttributeHelper<MinuteIncrementAttribute>.GetAttributeValue(property);
-            if (minuteAttr != null)
+            var binding = new Binding
             {
-                num.MinuteIncrement = minuteAttr.Number;
-
-            }
-            var clock = Helpers.AttributeHelper<ClockIdentifierAttribute>.GetAttributeValue(property);
-            if (clock != null)
-            {
-                num.ClockIdentifier = clock.ClockFormat;
-            }
-            TextBlock txterror;
-            var binding = new Windows.UI.Xaml.Data.Binding();
-            if (parentProperty != null)
-            {
-                binding.Path = new PropertyPath(parentProperty.Name + "." + property.Name);
-                num.Name = parentProperty.Name + "_" + property.Name;
-                txterror = GenerateErrorField(num.Name);
-            }
-            else
-            {
-                binding.Path = new PropertyPath(property.Name);
-                num.Name = property.Name;
-                txterror = GenerateErrorField(num.Name);
-            }
-            binding.Source = CurrentDataContext;
-            binding.Mode = BindingMode.TwoWay;
-            // binding.NotifyOnValidationError = true;
-            binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+                Path = new PropertyPath(propertyBag.NameFullPath),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
             num.SetBinding(TimePicker.TimeProperty, binding);
 
-            TextBlock label = new TextBlock();
-            var displayAttribute = Helpers.AttributeHelper<DisplayAttribute>.GetAttributeValue(property);
-            if (displayAttribute != null)
+
+            if (propertyBag.MinuteIncrement > 0)
             {
-                label.Text = displayAttribute.Label;
+                num.MinuteIncrement = propertyBag.MinuteIncrement;
             }
-            else
+
+            if (!string.IsNullOrWhiteSpace( propertyBag.ClockFormat))
             {
-                label.Text = property.Name;
+                num.ClockIdentifier = propertyBag.ClockFormat;
             }
+
+            TextBlock txterror = GenerateErrorField(num.Name);
+
+            var label = new TextBlock()
+            {
+                Text = propertyBag.DisplayAs ?? propertyBag.Name
+            };
+
             object sub = null;
-            var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
-            if (subTitleAttribute != null)
+            if (!string.IsNullOrWhiteSpace(propertyBag.Subtitle))
             {
-                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-
+                sub = SubTitleTextBlock(propertyBag.Subtitle);
             }
-            var isEnabledAttribute = Helpers.AttributeHelper<IsEnabledPropertyAttribute>.GetAttributeValue(property);
-            if (isEnabledAttribute != null)
+
+            if (!string.IsNullOrWhiteSpace(propertyBag.EnabledWhenSource))
             {
-                if (!string.IsNullOrEmpty(isEnabledAttribute.PropertyToBind))
+                Binding bindig3 = new Binding
                 {
-                    var bindig3 = new Windows.UI.Xaml.Data.Binding();
-                    bindig3.Source = CurrentDataContext;
-
-                    if (parentProperty != null)
-                    {
-                        bindig3.Path = new PropertyPath(parentProperty.Name + "." + isEnabledAttribute.PropertyToBind);
-                    }
-                    else
-                    {
-                        bindig3.Path = new PropertyPath(isEnabledAttribute.PropertyToBind);
-                    }
-
-                    bindig3.Mode = BindingMode.TwoWay;
-                    bindig3.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                    num.SetBinding(TextBox.IsEnabledProperty, bindig3);
-                }
-                else
-                {
-                    if (isEnabledAttribute.IsEnabled)
-                    {
-                        num.IsEnabled = true;
-                    }
-                    else
-                    {
-                        num.IsEnabled = false;
-                    }
-                }
-            }
+                    Source = CurrentDataContext,
+                    Path = new PropertyPath(propertyBag.EnabledWhenSource),
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                };
+                num.SetBinding(TextBox.IsEnabledProperty, bindig3);
+            };
 
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -810,86 +749,55 @@ namespace AutoGenerateForm.Uwp
                 field.Stack.Children.Add(num);
                 field.Stack.Children.Add(txterror);
                 fields.Add(field);
-                CheckIsVisible(field, parentProperty, property);
+                //CheckIsVisible(field, parentProperty, property);
             });
 
         }
 
 
 
-        private async void GenerateDateTimePicker(PropertyInfo property, PropertyInfo parentProperty)
+        private async void GenerateDateTimePicker(DateTimePropertyBag propertyBag)
         {
-            DatePicker num = new DatePicker();
-            TextBlock txterror;
-            var binding = new Windows.UI.Xaml.Data.Binding();
-            if (parentProperty != null)
+            var date = new DatePicker()
             {
-                binding.Path = new PropertyPath(parentProperty.Name + "." + property.Name);
-                num.Name = parentProperty.Name + "_" + property.Name;
-                txterror = GenerateErrorField(num.Name);
-            }
-            else
-            {
-                binding.Path = new PropertyPath(property.Name);
-                num.Name = property.Name;
-                txterror = GenerateErrorField(num.Name);
-            }
-            binding.Source = CurrentDataContext;
-            binding.Mode = BindingMode.TwoWay;
-            // binding.NotifyOnValidationError = true;
-            binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-            num.SetBinding(DatePicker.DateProperty, binding);
+                Name = this.ConvertNamePathToControlName(propertyBag.NameFullPath)
+            };
+            
 
-            TextBlock label = new TextBlock();
-            var displayAttribute = Helpers.AttributeHelper<DisplayAttribute>.GetAttributeValue(property);
-            if (displayAttribute != null)
+            var binding = new Binding
             {
-                label.Text = displayAttribute.Label;
-            }
-            else
+                Path = new PropertyPath(propertyBag.NameFullPath),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
+            date.SetBinding(DatePicker.DateProperty, binding);
+
+            TextBlock txterror = GenerateErrorField(date.Name);
+
+            var label = new TextBlock()
             {
-                label.Text = property.Name;
-            }
+                Text = propertyBag.DisplayAs ?? propertyBag.Name
+            };
+
+
             object sub = null;
-            var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
-            if (subTitleAttribute != null)
+            if (!string.IsNullOrWhiteSpace(propertyBag.Subtitle))
             {
-                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-
+                sub = SubTitleTextBlock(propertyBag.Subtitle);
             }
-            var isEnabledAttribute = Helpers.AttributeHelper<IsEnabledPropertyAttribute>.GetAttributeValue(property);
-            if (isEnabledAttribute != null)
+
+            if (!string.IsNullOrWhiteSpace(propertyBag.EnabledWhenSource))
             {
-                if (!string.IsNullOrEmpty(isEnabledAttribute.PropertyToBind))
+                Binding bindig3 = new Binding
                 {
-                    var bindig3 = new Windows.UI.Xaml.Data.Binding();
-                    bindig3.Source = CurrentDataContext;
-
-                    if (parentProperty != null)
-                    {
-                        bindig3.Path = new PropertyPath(parentProperty.Name + "." + isEnabledAttribute.PropertyToBind);
-                    }
-                    else
-                    {
-                        bindig3.Path = new PropertyPath(isEnabledAttribute.PropertyToBind);
-                    }
-
-                    bindig3.Mode = BindingMode.TwoWay;
-                    bindig3.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                    num.SetBinding(TextBox.IsEnabledProperty, bindig3);
-                }
-                else
-                {
-                    if (isEnabledAttribute.IsEnabled)
-                    {
-                        num.IsEnabled = true;
-                    }
-                    else
-                    {
-                        num.IsEnabled = false;
-                    }
-                }
-            }
+                    Source = CurrentDataContext,
+                    Path = new PropertyPath(propertyBag.EnabledWhenSource),
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                };
+                date.SetBinding(TextBox.IsEnabledProperty, bindig3);
+            };
 
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -900,10 +808,10 @@ namespace AutoGenerateForm.Uwp
                     field.Stack.Children.Add((TextBlock)sub);
                 }
                 field.Stack.Children.Add(label);
-                field.Stack.Children.Add(num);
+                field.Stack.Children.Add(date);
                 field.Stack.Children.Add(txterror);
                 fields.Add(field);
-                CheckIsVisible(field, parentProperty, property);
+                //CheckIsVisible(field, parentProperty, property);
             });
 
         }
@@ -1153,120 +1061,95 @@ namespace AutoGenerateForm.Uwp
             //stackPanel.Children.Add(txterror);
         }
 
-
-        private async void GenerateTextBox(PropertyInfo property, PropertyInfo parentProperty = null)
+        private string ConvertNamePathToControlName(string name)
         {
-            var txt = new TextBox();
-            TextBlock txterror;
-            txt.TextChanged += Txt_TextChanged;
-            txt.TextWrapping = TextWrapping.Wrap;
+            return name.Replace(".", "_");
+        }
 
-            var binding = new Binding();
-            if (parentProperty != null)
+        private async void GenerateTextBox(StringPropertyBag propertyBag)
+        {
+            var txt = new TextBox
             {
-                binding.Path = new PropertyPath(parentProperty.Name + "." + property.Name);
-                txt.Name = parentProperty.Name + "_" + property.Name;
-                txterror = GenerateErrorField(txt.Name);
-            }
-            else
+                TextWrapping = TextWrapping.Wrap,
+                Name = this.ConvertNamePathToControlName(propertyBag.NameFullPath)
+            };
+            txt.TextChanged += Txt_TextChanged;
+
+            var binding = new Binding
             {
-                binding.Path = new PropertyPath(property.Name);
-                txt.Name = property.Name;
-                txterror = GenerateErrorField(txt.Name);
-            }
-            binding.Source = CurrentDataContext;
-            binding.Mode = BindingMode.TwoWay;
-            // binding.NotifyOnValidationError = true;
-            binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+                Path = new PropertyPath(propertyBag.NameFullPath),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
             txt.SetBinding(TextBox.TextProperty, binding);
-            var label = new TextBlock();
-            var multilineAttribute = Helpers.AttributeHelper<MultilineAttribute>.GetAttributeValue(property);
-            if (multilineAttribute != null)
+
+            TextBlock txterror = GenerateErrorField(txt.Name);
+
+
+            if (propertyBag.Multiline)
             {
                 txt.AcceptsReturn = true;
             }
-            var displayAttribute = Helpers.AttributeHelper<DisplayAttribute>.GetAttributeValue(property);
-            if (displayAttribute != null)
-            {
-                label.Text = displayAttribute.Label;
-            }
-            else
-            {
-                label.Text = property.Name;
-            }
-            var minAttribute = Helpers.AttributeHelper<MinMaxSizeAttribute>.GetAttributeValue(property);
-            if (minAttribute != null)
-            {
-                if (minAttribute.MinWidth > 0)
-                    txt.MinWidth = minAttribute.MinWidth;
-                if (minAttribute.MinHeight > 0)
-                    txt.MinHeight = minAttribute.MinHeight;
-                if (minAttribute.MaxHeight > 0)
-                    txt.MaxHeight = minAttribute.MaxHeight;
-                if (minAttribute.MaxWidth > 0)
-                    txt.MaxWidth = minAttribute.MaxWidth;
-            }
-            var stringLinght = Helpers.AttributeHelper<StringLengthAttribute>.GetAttributeValue(property);
-            if (stringLinght != null)
-            {
-                txt.MaxLength = stringLinght.Count;
-            }
-            var isEnabledAttribute = Helpers.AttributeHelper<IsEnabledPropertyAttribute>.GetAttributeValue(property);
-            if (isEnabledAttribute != null)
-            {
-                if (!string.IsNullOrEmpty(isEnabledAttribute.PropertyToBind))
-                {
-                    Binding bindig3 = new Binding();
-                    bindig3.Source = CurrentDataContext;
 
-                    if (parentProperty != null)
-                    {
-                        bindig3.Path = new PropertyPath(parentProperty.Name + "." + isEnabledAttribute.PropertyToBind);
-                    }
-                    else
-                    {
-                        bindig3.Path = new PropertyPath(isEnabledAttribute.PropertyToBind);
-                    }
+            var label = new TextBlock()
+            {
+                Text = propertyBag.DisplayAs ?? propertyBag.Name
+            };
 
-                    bindig3.Mode = BindingMode.TwoWay;
-                    bindig3.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                    txt.SetBinding(TextBox.IsEnabledProperty, bindig3);
-                }
-                else
-                {
-                    if (isEnabledAttribute.IsEnabled)
-                    {
-                        txt.IsEnabled = true;
-                    }
-                    else
-                    {
-                        txt.IsEnabled = false;
-                    }
-                }
+
+            if (propertyBag.MinAndMaxSize != (0, 0, 0, 0))
+            {
+                if (propertyBag.MinAndMaxSize.MinWidth > 0)
+                    txt.MinWidth = propertyBag.MinAndMaxSize.MinWidth;
+                if (propertyBag.MinAndMaxSize.MinHeight > 0)
+                    txt.MinHeight = propertyBag.MinAndMaxSize.MinHeight;
+                if (propertyBag.MinAndMaxSize.MaxHeight > 0)
+                    txt.MaxHeight = propertyBag.MinAndMaxSize.MaxHeight;
+                if (propertyBag.MinAndMaxSize.MaxWidth > 0)
+                    txt.MaxWidth = propertyBag.MinAndMaxSize.MaxWidth;
             }
+
+            if (propertyBag.Length > 0)
+            {
+                txt.MaxLength = propertyBag.Length;
+            }
+
+            if (!string.IsNullOrWhiteSpace(propertyBag.EnabledWhenSource))
+            {
+                Binding bindig3 = new Binding
+                {
+                    Source = CurrentDataContext,
+                    Path = new PropertyPath(propertyBag.EnabledWhenSource),
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                };
+                txt.SetBinding(TextBox.IsEnabledProperty, bindig3);
+            };
+
+            //TODO: Validate Other types of enabled
+
+
+
             object sub = null;
-            var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
-            if (subTitleAttribute != null)
+            if (!string.IsNullOrWhiteSpace(propertyBag.Subtitle))
             {
-                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-
+                sub = SubTitleTextBlock(propertyBag.Subtitle);
             }
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
-            {
-                var field = new Controls.FieldContainerControl();
-                if (sub != null)
-                {
-                    field.Stack.Children.Add((TextBlock)sub);
-                }
-                field.Stack.Children.Add(label);
-                field.Stack.Children.Add(txt);
-                field.Stack.Children.Add(txterror);
-                CheckIsVisible(field, parentProperty, property);
-                fields.Add(field);
-
-
-            });
+                    {
+                        var field = new Controls.FieldContainerControl();
+                        if (sub != null)
+                        {
+                            field.Stack.Children.Add((TextBlock)sub);
+                        }
+                        field.Stack.Children.Add(label);
+                        field.Stack.Children.Add(txt);
+                        field.Stack.Children.Add(txterror);
+                        // CheckIsVisible(field, property);
+                        fields.Add(field);
+                    });
 
 
         }
@@ -1276,7 +1159,7 @@ namespace AutoGenerateForm.Uwp
             if (!IsUpperCaseEnabled)
                 return;
             var text = sender as TextBox;
-            if (text != null && text.Text.Any())
+            if (text != null && !string.IsNullOrEmpty(text.Text))
             {
                 try
                 {
@@ -1286,88 +1169,49 @@ namespace AutoGenerateForm.Uwp
                     text.SelectionStart = selectionStart;
                     text.SelectionLength = selectionLengh;
                 }
-                catch (Exception)
-                {
-
-
-                }
-
+                catch (Exception) { }
             }
         }
 
-        private async void GenerateDatePicker(PropertyInfo property, PropertyInfo parentProperty = null)
+        private async void GenerateDatePicker(DateTimePropertyBag propertyBag)
         {
-            DatePicker picker = new DatePicker();
-            TextBlock txterror;
-            Binding binding = new Binding();
-            if (parentProperty != null)
+            DatePicker picker = new DatePicker()
             {
-                binding.Path = new PropertyPath(parentProperty.Name + "." + property.Name);
-                picker.Name = parentProperty.Name + "_" + property.Name;
-                txterror = GenerateErrorField(picker.Name);
-            }
-            else
+                Name = this.ConvertNamePathToControlName(propertyBag.NameFullPath)
+            };
+            TextBlock txterror = GenerateErrorField(picker.Name);
+
+            var binding = new Binding
             {
-                binding.Path = new PropertyPath(property.Name);
-                picker.Name = property.Name;
-                txterror = GenerateErrorField(picker.Name);
-            }
-            binding.Converter = new Converters.DateTimeToDateTimeOffsetConverter();
-            binding.Source = CurrentDataContext;
-            binding.Mode = BindingMode.TwoWay;
-            //  binding.NotifyOnValidationError = true;
-            binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+                Path = new PropertyPath(propertyBag.NameFullPath),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+                Converter = new Converters.DateTimeToDateTimeOffsetConverter(),
+            };
             picker.SetBinding(DatePicker.DateProperty, binding);
-            var isEnabledAttribute = Helpers.AttributeHelper<IsEnabledPropertyAttribute>.GetAttributeValue(property);
-            if (isEnabledAttribute != null)
-            {
-                if (!string.IsNullOrEmpty(isEnabledAttribute.PropertyToBind))
-                {
-                    Binding bindig3 = new Binding();
-                    bindig3.Source = CurrentDataContext;
 
-                    if (parentProperty != null)
-                    {
-                        bindig3.Path = new PropertyPath(parentProperty.Name + "." + isEnabledAttribute.PropertyToBind);
-                    }
-                    else
-                    {
-                        bindig3.Path = new PropertyPath(isEnabledAttribute.PropertyToBind);
-                    }
-
-                    bindig3.Mode = BindingMode.TwoWay;
-                    bindig3.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                    picker.SetBinding(TextBox.IsEnabledProperty, bindig3);
-                }
-                else
+            if (!string.IsNullOrWhiteSpace(propertyBag.EnabledWhenSource))
+            {
+                Binding bindig3 = new Binding
                 {
-                    if (isEnabledAttribute.IsEnabled)
-                    {
-                        picker.IsEnabled = true;
-                    }
-                    else
-                    {
-                        picker.IsEnabled = false;
-                    }
-                }
-            }
-            TextBlock label = new TextBlock();
-            var displayAttribute = Helpers.AttributeHelper<DisplayAttribute>.GetAttributeValue(property);
-            if (displayAttribute != null)
+                    Source = CurrentDataContext,
+                    Path = new PropertyPath(propertyBag.EnabledWhenSource),
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                };
+                picker.SetBinding(TextBox.IsEnabledProperty, bindig3);
+            };
+
+            var label = new TextBlock()
             {
-                label.Text = displayAttribute.Label;
-            }
-            else
-            {
-                label.Text = property.Name;
-            }
+                Text = propertyBag.DisplayAs ?? propertyBag.Name
+            };
 
             object sub = null;
-            var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
-            if (subTitleAttribute != null)
+            if (!string.IsNullOrWhiteSpace(propertyBag.Subtitle))
             {
-                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-
+                sub = SubTitleTextBlock(propertyBag.Subtitle);
             }
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
@@ -1381,83 +1225,51 @@ namespace AutoGenerateForm.Uwp
                 field.Stack.Children.Add(picker);
                 field.Stack.Children.Add(txterror);
                 fields.Add(field);
-                CheckIsVisible(field, parentProperty, property);
+                //CheckIsVisible(field, parentProperty, property);
             });
 
 
         }
 
-        private async void GenerateCheckBox(PropertyInfo property, PropertyInfo parentProperty = null)
+        private async void GenerateCheckBox(BooleanPropertyBag propertyBag)
         {
-            var box = new CheckBox();
-            TextBlock txterror;
-            Binding binding = new Binding();
-            if (parentProperty != null)
+            var box = new CheckBox()
             {
-                binding.Path = new PropertyPath(parentProperty.Name + "." + property.Name);
-                box.Name = parentProperty.Name + "_" + property.Name;
-                txterror = GenerateErrorField(box.Name);
-            }
-            else
+                Name = this.ConvertNamePathToControlName(propertyBag.NameFullPath)
+            };
+
+            var binding = new Binding
             {
-                binding.Path = new PropertyPath(property.Name);
-                box.Name = property.Name;
-                txterror = GenerateErrorField(box.Name);
-            }
-            binding.Source = CurrentDataContext;
-            binding.Mode = BindingMode.TwoWay;
-            //  binding.NotifyOnValidationError = true;
-            binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
+                Path = new PropertyPath(propertyBag.NameFullPath),
+                Source = CurrentDataContext,
+                Mode = BindingMode.TwoWay,
+                UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged,
+            };
             box.SetBinding(CheckBox.IsCheckedProperty, binding);
-            var isEnabledAttribute = Helpers.AttributeHelper<IsEnabledPropertyAttribute>.GetAttributeValue(property);
-            if (isEnabledAttribute != null)
-            {
-                if (!string.IsNullOrEmpty(isEnabledAttribute.PropertyToBind))
-                {
-                    Binding bindig3 = new Binding();
-                    bindig3.Source = CurrentDataContext;
 
-                    if (parentProperty != null)
-                    {
-                        bindig3.Path = new PropertyPath(parentProperty.Name + "." + isEnabledAttribute.PropertyToBind);
-                    }
-                    else
-                    {
-                        bindig3.Path = new PropertyPath(isEnabledAttribute.PropertyToBind);
-                    }
+            TextBlock txterror = GenerateErrorField(box.Name);
 
-                    bindig3.Mode = BindingMode.TwoWay;
-                    bindig3.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
-                    box.SetBinding(TextBox.IsEnabledProperty, bindig3);
-                }
-                else
+            var label = new TextBlock()
+            {
+                Text = propertyBag.DisplayAs ?? propertyBag.Name
+            };
+
+            if (!string.IsNullOrWhiteSpace(propertyBag.EnabledWhenSource))
+            {
+                Binding bindig3 = new Binding
                 {
-                    if (isEnabledAttribute.IsEnabled)
-                    {
-                        box.IsEnabled = true;
-                    }
-                    else
-                    {
-                        box.IsEnabled = false;
-                    }
-                }
-            }
-            TextBlock label = new TextBlock();
-            var displayAttribute = Helpers.AttributeHelper<DisplayAttribute>.GetAttributeValue(property);
-            if (displayAttribute != null)
-            {
-                label.Text = displayAttribute.Label;
-            }
-            else
-            {
-                label.Text = property.Name;
-            }
+                    Source = CurrentDataContext,
+                    Path = new PropertyPath(propertyBag.EnabledWhenSource),
+                    Mode = BindingMode.TwoWay,
+                    UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged
+                };
+                box.SetBinding(TextBox.IsEnabledProperty, bindig3);
+            };
+
             object sub = null;
-            var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
-            if (subTitleAttribute != null)
+            if (!string.IsNullOrWhiteSpace(propertyBag.Subtitle))
             {
-                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-
+                sub = SubTitleTextBlock(propertyBag.Subtitle);
             }
 
 
@@ -1473,7 +1285,7 @@ namespace AutoGenerateForm.Uwp
                 field.Stack.Children.Add(box);
                 field.Stack.Children.Add(txterror);
                 fields.Add(field);
-                CheckIsVisible(field, parentProperty, property);
+                //CheckIsVisible(field, parentProperty, property);
             });
 
 

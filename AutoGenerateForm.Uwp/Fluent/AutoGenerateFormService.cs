@@ -135,7 +135,6 @@ namespace AutoGenerateForm.Uwp
             var bag = new PropertyBag()
             {
                 DisplayAs = property.TryGetAttribute<DisplayAttribute>(out var display) ? display.Label : null,
-                //Required = property.TryGetAttribute<Required>
                 Subtitle = property.TryGetAttribute<SubtitleAttribute>(out var subtitle) ? subtitle.SubTitle : null,
                 EnabledWhenSource = property.TryGetAttribute<IsEnabledPropertyAttribute>(out var isEnabled) ? isEnabled.PropertyToBind : null,
                 //EnabledWhen = property.TryGetAttribute<IsEnabledPropertyAttribute>(out var isEnabled) ? 
@@ -165,7 +164,10 @@ namespace AutoGenerateForm.Uwp
                     bag = new StringPropertyBag(bag)
                     {
                         Multiline = property.TryGetAttribute<MultilineAttribute>(out var multiline),
-                        Length = property.TryGetAttribute<StringLengthAttribute>(out var length) ? length.Count : 0
+                        Length = property.TryGetAttribute<StringLengthAttribute>(out var length) ? length.Count : 0,
+                        MinAndMaxSize = property.TryGetAttribute<MinMaxSizeAttribute>(out var minMaxSize) ? 
+                                            (minMaxSize.MinWidth, minMaxSize.MinHeight, minMaxSize.MaxWidth, minMaxSize.MaxHeight) : 
+                                            (0, 0, 0, 0)
                     };
                 }
             }
