@@ -17,8 +17,8 @@ namespace UniversalFormsToolkit.BasicExample
         {
             this.InitializeComponent();
 
-            //AutoGenerateFormService.ForEntity<Student>().Property(s => s.FirstName).DisplayAs("Primer Nombre").WithOrder(1).VisibleWhen(s => s.FirstName != null);
-            //AutoGenerateFormService.ForEntity<Student>().Property(s => s.Birthday).DisplayAs("Cumpleaños");
+            AutoGenerateFormService.ForEntity<Student>().Property(s => s.FirstName).DisplayAs("Primer Nombre").WithOrder(1).VisibleWhen(s => s.FirstName != null);
+            AutoGenerateFormService.ForEntity<Student>().Property(s => s.Birthday).DisplayAs("Cumpleaños");
 
 
             this.MyStudent = new Student()

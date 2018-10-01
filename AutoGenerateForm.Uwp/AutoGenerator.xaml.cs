@@ -1,6 +1,7 @@
 ﻿using AutoGenerateForm.Attributes;
 using AutoGenerateForm.Uwp.Controls;
 using AutoGenerateForm.Uwp.Events;
+using AutoGenerateForm.Uwp.Fluent;
 using AutoGenerateForm.Uwp.Models;
 using Callisto.Controls;
 using System;
@@ -25,7 +26,7 @@ namespace AutoGenerateForm.Uwp
     internal class TypeSwitch
     {
         Dictionary<Type, Action<object>> matches = new Dictionary<Type, Action<object>>();
-        public TypeSwitch Case<T>(Action<T> action) { matches.Add(typeof(T), (x) => action((T) x)); return this; }
+        public TypeSwitch Case<T>(Action<T> action) { matches.Add(typeof(T), (x) => action((T)x)); return this; }
         public void Switch(object x) { matches[x.GetType()](x); }
     }
     public sealed partial class AutoGenerator : UserControl
@@ -35,7 +36,7 @@ namespace AutoGenerateForm.Uwp
 
         private bool isLoaded;
         private CoreDispatcher dispatcher = null;
-   
+
 
         public event EventHandler<FormCreatedEventArgs> OnFormCreated;
         public AutoGenerator()
@@ -45,7 +46,7 @@ namespace AutoGenerateForm.Uwp
             if (!DesignMode.DesignModeEnabled)
             {
 
-            
+
                 this.fields = new ObservableCollection<Controls.FieldContainerControl>();
                 dispatcher = CoreApplication.GetCurrentView().Dispatcher;
                 this.OnFormCreated += AutoGenerator_OnFormCreated;
@@ -75,14 +76,14 @@ namespace AutoGenerateForm.Uwp
 
                         }
                     }
-                  
+
                 }
 
         }
 
         public object CurrentDataContext
         {
-            get { return (object) GetValue(CurrentDataContextProperty); }
+            get { return (object)GetValue(CurrentDataContextProperty); }
             set { SetValue(CurrentDataContextProperty, value); }
         }
 
@@ -120,10 +121,10 @@ namespace AutoGenerateForm.Uwp
                             var element = item as Controls.FieldContainerControl;
                             if (element != null)
                             {
-                                
+
                                 control.SetVisibilityListViewItem(element);
                                 control.RefreshBinding(element, e.NewValue);
-                               
+
                             }
 
                         }
@@ -136,7 +137,7 @@ namespace AutoGenerateForm.Uwp
 
         }
 
-      
+
         private async void AutoGenerator_OnFormCreated(object sender, FormCreatedEventArgs e)
         {
             await Task.Delay(ValidationDelay);
@@ -151,14 +152,14 @@ namespace AutoGenerateForm.Uwp
                     if (field != null)
                     {
                         var stack = field.Content as StackPanel;
-                        if (stack != null && stack.Children!=null)
+                        if (stack != null && stack.Children != null)
                         {
                             var control = stack.Children.OfType<Control>().FirstOrDefault();
                             if (control != null)
                             {
                                 control.KeyDown += Control_KeyDown;
                             }
-                            
+
                         }
                     }
                     SetVisibilityListViewItem(item);
@@ -170,9 +171,9 @@ namespace AutoGenerateForm.Uwp
 
         private void Control_KeyDown(object sender, Windows.UI.Xaml.Input.KeyRoutedEventArgs e)
         {
-          if(e.Key== Windows.System.VirtualKey.Tab)
+            if (e.Key == Windows.System.VirtualKey.Tab)
             {
-               // e.Handled = true;
+                // e.Handled = true;
                 var originalSource = (Control)e.OriginalSource;
                 int index = 0;
                 var items = listView.Items;
@@ -191,7 +192,7 @@ namespace AutoGenerateForm.Uwp
                     index = (index + 1) % items.Count;
                     var nextControl = GetFocusableControl(index);
                     nextControl?.Focus(FocusState.Programmatic);
-                   
+
                 }
 
             }
@@ -206,7 +207,7 @@ namespace AutoGenerateForm.Uwp
                 var field = nextControl as FieldContainerControl;
                 if (field != null)
                 {
-                    if(field.Visibility== Visibility.Visible)
+                    if (field.Visibility == Visibility.Visible)
                     {
                         var stack = field.Content as StackPanel;
                         if (stack != null)
@@ -238,7 +239,7 @@ namespace AutoGenerateForm.Uwp
                 }
             }
             return nextControl;
-           
+
         }
         private static T FindVisualChild<T>(DependencyObject parent) where T : DependencyObject
         {
@@ -299,7 +300,7 @@ namespace AutoGenerateForm.Uwp
                 binding0.Path = bindexpr0.ParentBinding.Path;
                 container.SetBinding(Controls.FieldContainerControl.VisibilityProperty, binding0);
             }
-            
+
             var controls = container.Stack.Children.Where(x => x.GetType().GetTypeInfo().BaseType == typeof(Control) ||
             x.GetType().GetTypeInfo().BaseType == typeof(Selector) ||
             x.GetType().GetTypeInfo().BaseType == typeof(RangeBase) ||
@@ -393,7 +394,7 @@ namespace AutoGenerateForm.Uwp
              })
               .Case((TimePicker x) =>
               {
-                  BindingExpression bindexpr = x.GetBindingExpression(TimePicker.TimeProperty  );
+                  BindingExpression bindexpr = x.GetBindingExpression(TimePicker.TimeProperty);
                   if (bindexpr != null && bindexpr.ParentBinding != null)
                   {
                       binding.Path = bindexpr.ParentBinding.Path;
@@ -416,7 +417,7 @@ namespace AutoGenerateForm.Uwp
                      binding2.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
                      x.SetBinding(CheckBox.IsCheckedProperty, binding2);
                  }
-               
+
              });
 
 
@@ -435,7 +436,7 @@ namespace AutoGenerateForm.Uwp
                 TitleTextBlock(this.TitleForm);
             }
             listView.ItemsSource = fields;
-           
+
             //this.Content = scroll;
             this.Content = listView;
             if (this.CurrentDataContext != null)
@@ -445,14 +446,18 @@ namespace AutoGenerateForm.Uwp
                 {
                     Type mainType = this.CurrentDataContext.GetType();
 
-                    var props = new List<PropertyInfo>(mainType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                                                              .Where(x => x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false).Any() &&
-                                                                                          x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false)
-                                                                                           .Cast<AutoGeneratePropertyAttribute>()
-                                                                                           .Any(z => z.AutoGenerate == true))
-                                                                              .ToList());
-                    var orderedprops = GetOrderedProperties(props);
-                    await GenerateForm(orderedprops).ContinueWith(async completed =>
+                    //var props = new List<PropertyInfo>(mainType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                    //                                                         .Where(x => x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false).Any() &&
+                    //                                                                     x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false)
+                    //                                                                      .Cast<AutoGeneratePropertyAttribute>()
+                    //                                                                      .Any(z => z.AutoGenerate == true))
+                    //                                                         .ToList());
+
+                    //var orderedprops = GetOrderedProperties(props);
+
+                    var entityBag = AutoGenerateFormService.Instance.GetConfigFromDataContext(this.CurrentDataContext);
+
+                    await GenerateFormAsync(entityBag).ContinueWith(async completed =>
                     {
                         await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
                         {
@@ -466,57 +471,60 @@ namespace AutoGenerateForm.Uwp
             }
         }
 
-        private async Task GenerateForm(List<PropertyInfo> orderedprops, PropertyInfo parentProperty = null)
+        private async Task GenerateFormAsync(EntityBag entityBag, EntityBag parentEntityBag = null)
         {
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, async () =>
             {
-                if (orderedprops != null)
+                if (entityBag != null)
                 {
-                    foreach (var property in orderedprops)
+                    foreach (var property in entityBag.Properties)
                     {
-                        var tColl = typeof(ICollection<>);
-                        var propertyType = property.PropertyType;
-                        if (!property.PropertyType.Equals(typeof(int)) &&
-                            !property.PropertyType.Equals(typeof(string)) &&
-                            !property.PropertyType.Equals(typeof(float)) &&
-                            !property.PropertyType.Equals(typeof(double)) &&
-                            !property.PropertyType.Equals(typeof(decimal)) &&
-                            !propertyType.Equals(typeof(int?)) &&
-                            !propertyType.Equals(typeof(float?)) &&
-                            !propertyType.Equals(typeof(decimal?)) &&
-                            !propertyType.Equals(typeof(double?)) &&
-                            !property.PropertyType.Equals(typeof(DateTime)) &&
-                            !property.PropertyType.Equals(typeof(DateTime?)) &&
-                            !property.PropertyType.Equals(typeof(bool)) &&
-                            !propertyType.Equals(typeof(bool?)) &&
-                            !property.PropertyType.Equals(typeof(TimeSpan)) &&
-                            !propertyType.Equals(typeof(TimeSpan?)) &&
-                            (propertyType.GetTypeInfo().IsGenericType && tColl.IsAssignableFrom(propertyType.GetGenericTypeDefinition()) ||
-                             propertyType.GetInterfaces().Any(x => x.GetTypeInfo().IsGenericType && x.GetGenericTypeDefinition() == tColl)) == false)
-                        {
-                            List<PropertyInfo> props = new List<PropertyInfo>(propertyType
-                                                                                          .GetProperties(BindingFlags.Public | BindingFlags.Instance)
-                                                                                          .Where(x => x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false).Any() &&
-                                                                                                      x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false)
-                                                                                                       .Cast<AutoGeneratePropertyAttribute>()
-                                                                                                       .Any(z => z.AutoGenerate == true))
-                                                                                          .ToList());
+                        //var tColl = typeof(ICollection<>);
+                        //var propertyType = property.Key.PropertyType;
 
-                            var orderedprops1 = GetOrderedProperties(props);
-                            await GenerateForm(orderedprops1, property);
-                        }
-                        else
-                        {
+                        //if (!propertyType.Equals(typeof(int)) &&
+                        //    !propertyType.Equals(typeof(string)) &&
+                        //    !propertyType.Equals(typeof(float)) &&
+                        //    !propertyType.Equals(typeof(double)) &&
+                        //    !propertyType.Equals(typeof(decimal)) &&
+                        //    !propertyType.Equals(typeof(int?)) &&
+                        //    !propertyType.Equals(typeof(float?)) &&
+                        //    !propertyType.Equals(typeof(decimal?)) &&
+                        //    !propertyType.Equals(typeof(double?)) &&
+                        //    !propertyType.Equals(typeof(DateTime)) &&
+                        //    !propertyType.Equals(typeof(DateTime?)) &&
+                        //    !propertyType.Equals(typeof(bool)) &&
+                        //    !propertyType.Equals(typeof(bool?)) &&
+                        //    !propertyType.Equals(typeof(TimeSpan)) &&
+                        //    !propertyType.Equals(typeof(TimeSpan?)) &&
+                        //    (propertyType.GetTypeInfo().IsGenericType && tColl.IsAssignableFrom(propertyType.GetGenericTypeDefinition()) ||
+                        //     propertyType.GetInterfaces().Any(x => x.GetTypeInfo().IsGenericType && x.GetGenericTypeDefinition() == tColl)) == false)
+                        //{
+                        //    //List<PropertyInfo> props = new List<PropertyInfo>(propertyType.GetProperties(BindingFlags.Public | BindingFlags.Instance)
+                        //    //                                                              .Where(x => x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false).Any() &&
+                        //    //                                                                          x.GetCustomAttributes(typeof(AutoGeneratePropertyAttribute), false)
+                        //    //                                                                           .Cast<AutoGeneratePropertyAttribute>()
+                        //    //                                                                           .Any(z => z.AutoGenerate == true))
+                        //    //                                                              .ToList());
 
-                            await GenerateControls(property, parentProperty);
-                        }
+                        //    //var orderedprops1 = GetOrderedProperties(props);
+
+                        //    var childEntityBag = AutoGenerateFormService.Instance.GetConfigFromDataContext(propertyType);
+
+                        //    await GenerateFormAsync(childEntityBag, parentEntityBag);
+                        //}
+                        //else
+                        //{
+
+                        await GenerateControls(property, parentProperty);
+                        //}
                     }
                 }
 
             });
         }
 
-        private Task GenerateControls(PropertyInfo property, PropertyInfo parentProperty = null)
+        private Task GenerateControls (PropertyInfo property, PropertyInfo parentProperty = null)
         {
             var propertyType = property.PropertyType;
             if (propertyType.Equals(typeof(int)) ||
@@ -693,7 +701,7 @@ namespace AutoGenerateForm.Uwp
             var field = new Controls.FieldContainerControl();
             if (sub != null)
             {
-                field.Stack.Children.Add((TextBlock) sub);
+                field.Stack.Children.Add((TextBlock)sub);
             }
             field.Stack.Children.Add(label);
             field.Stack.Children.Add(combo);
@@ -711,11 +719,11 @@ namespace AutoGenerateForm.Uwp
             var minuteAttr = Helpers.AttributeHelper<MinuteIncrementAttribute>.GetAttributeValue(property);
             if (minuteAttr != null)
             {
-                 num.MinuteIncrement = minuteAttr.Number;
+                num.MinuteIncrement = minuteAttr.Number;
 
             }
             var clock = Helpers.AttributeHelper<ClockIdentifierAttribute>.GetAttributeValue(property);
-            if (clock!=null)
+            if (clock != null)
             {
                 num.ClockIdentifier = clock.ClockFormat;
             }
@@ -882,7 +890,7 @@ namespace AutoGenerateForm.Uwp
                     }
                 }
             }
-      
+
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
@@ -1004,7 +1012,7 @@ namespace AutoGenerateForm.Uwp
                 var field = new Controls.FieldContainerControl();
                 if (sub != null)
                 {
-                    field.Stack.Children.Add((TextBlock) sub);
+                    field.Stack.Children.Add((TextBlock)sub);
                 }
                 field.Stack.Children.Add(label);
                 field.Stack.Children.Add(combo);
@@ -1044,7 +1052,7 @@ namespace AutoGenerateForm.Uwp
                 }
                 else
                 {
-                    num.Increment = (double) autoincrement.Step;
+                    num.Increment = (double)autoincrement.Step;
                 }
 
             }
@@ -1073,7 +1081,7 @@ namespace AutoGenerateForm.Uwp
             binding.UpdateSourceTrigger = UpdateSourceTrigger.PropertyChanged;
             num.SetBinding(Callisto.Controls.NumericUpDown.ValueProperty, binding);
 
-            
+
             var isEnabledAttribute = Helpers.AttributeHelper<IsEnabledPropertyAttribute>.GetAttributeValue(property);
             if (isEnabledAttribute != null)
             {
@@ -1249,7 +1257,7 @@ namespace AutoGenerateForm.Uwp
                 var field = new Controls.FieldContainerControl();
                 if (sub != null)
                 {
-                    field.Stack.Children.Add((TextBlock) sub);
+                    field.Stack.Children.Add((TextBlock)sub);
                 }
                 field.Stack.Children.Add(label);
                 field.Stack.Children.Add(txt);
@@ -1367,7 +1375,7 @@ namespace AutoGenerateForm.Uwp
                 var field = new Controls.FieldContainerControl();
                 if (sub != null)
                 {
-                    field.Stack.Children.Add((TextBlock) sub);
+                    field.Stack.Children.Add((TextBlock)sub);
                 }
                 field.Stack.Children.Add(label);
                 field.Stack.Children.Add(picker);
@@ -1448,15 +1456,15 @@ namespace AutoGenerateForm.Uwp
             var subTitleAttribute = Helpers.AttributeHelper<SubtitleAttribute>.GetAttributeValue(property);
             if (subTitleAttribute != null)
             {
-                 sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
-                
+                sub = SubTitleTextBlock(subTitleAttribute.SubTitle);
+
             }
-         
+
 
             await dispatcher.RunAsync(CoreDispatcherPriority.Normal, () =>
             {
                 var field = new Controls.FieldContainerControl();
-                if(sub!=null)
+                if (sub != null)
 
                 {
                     field.Stack.Children.Add((TextBlock)sub);
@@ -1519,7 +1527,7 @@ namespace AutoGenerateForm.Uwp
 
         private void TitleTextBlock(string title)
         {
-            if (!string.IsNullOrEmpty(title) && fields!= null)
+            if (!string.IsNullOrEmpty(title) && fields != null)
             {
                 TextBlock txt = new TextBlock();
                 txt.Text = title.ToUpper();
@@ -1579,7 +1587,7 @@ namespace AutoGenerateForm.Uwp
 
         public TimeSpan ValidationDelay
         {
-            get { return (TimeSpan) GetValue(ValidationDelayProperty); }
+            get { return (TimeSpan)GetValue(ValidationDelayProperty); }
             set { SetValue(ValidationDelayProperty, value); }
         }
 
@@ -1592,7 +1600,7 @@ namespace AutoGenerateForm.Uwp
         {
             get
             {
-                return (string) GetValue(TitleFormProperty);
+                return (string)GetValue(TitleFormProperty);
             }
             set
             {
@@ -1620,7 +1628,7 @@ namespace AutoGenerateForm.Uwp
         {
             get
             {
-                return (bool) GetValue(IsTitleEnabledProperty);
+                return (bool)GetValue(IsTitleEnabledProperty);
             }
             set
             {
@@ -1636,7 +1644,7 @@ namespace AutoGenerateForm.Uwp
 
         public bool IsUpperCaseEnabled
         {
-            get { return (bool) GetValue(IsUpperCaseEnabledProperty); }
+            get { return (bool)GetValue(IsUpperCaseEnabledProperty); }
             set { SetValue(IsUpperCaseEnabledProperty, value); }
         }
 
@@ -1648,7 +1656,7 @@ namespace AutoGenerateForm.Uwp
 
         public ICollection<ValidationModel> ValidationCollection
         {
-            get { return (ICollection<ValidationModel>) GetValue(ValidationCollectionProperty); }
+            get { return (ICollection<ValidationModel>)GetValue(ValidationCollectionProperty); }
             set { SetValue(ValidationCollectionProperty, value); }
         }
 

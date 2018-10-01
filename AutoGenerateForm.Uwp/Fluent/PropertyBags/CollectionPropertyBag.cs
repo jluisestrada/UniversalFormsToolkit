@@ -2,7 +2,7 @@
 
 namespace AutoGenerateForm.Uwp.Fluent
 {
-    internal class CollectionPropertyBag: PropertyBag
+    internal class CollectionPropertyBag : PropertyBag
     {
         public CollectionPropertyBag(PropertyBag bag)
         {
@@ -12,6 +12,8 @@ namespace AutoGenerateForm.Uwp.Fluent
             this.WithOrder = bag.WithOrder;
         }
 
+        internal string DisplayMemberPath { get; set; }
+        internal string SelectedItemPath { get; set; }
         internal PropertyInfo DisplayMember { get; set; }
 
         internal PropertyInfo SelectedItem { get; set; }

@@ -57,7 +57,7 @@ namespace AutoGenerateForm.Uwp
                         IEquatable<TNumeric>,
                         IFormattable
         {
-            propertyConfig._bag.AutoIncrement = true;
+            propertyConfig._bag.AutoIncrementStep = true;
             return propertyConfig;
         }
     }

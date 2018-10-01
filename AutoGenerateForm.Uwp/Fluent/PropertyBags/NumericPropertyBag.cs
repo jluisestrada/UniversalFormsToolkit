@@ -16,7 +16,7 @@
 
         internal int NumberOfDecimals { get; set; }
 
-        internal bool AutoIncrement { get; set; }
+        internal double AutoIncrementStep { get; set; }
 
     }
 }

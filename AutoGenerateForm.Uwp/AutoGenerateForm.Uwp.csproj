@@ -108,6 +108,8 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
+    <Compile Include="Fluent\Enums\ClockFormat.cs" />
+    <Compile Include="Fluent\PropertyBags\AutoSuggestionPropertyBag.cs" />
     <Compile Include="Fluent\PropertyBags\CollectionPropertyBag.cs" />
     <Compile Include="Fluent\CollectionPropertyConfiguration.cs" />
     <None Include="project.json" />
@@ -124,9 +126,13 @@
     <Compile Include="Fluent\Helpers\ReflectionHelper.cs" />
     <Compile Include="Fluent\NumericPropertyConfiguration.cs" />
     <Compile Include="Fluent\PropertyBags\EntityBag.cs" />
+    <Compile Include="Fluent\PropertyBags\EntityPropertyBag.cs" />
     <Compile Include="Fluent\PropertyBags\NumericPropertyBag.cs" />
     <Compile Include="Fluent\PropertyBags\PropertyBag.cs" />
+    <Compile Include="Fluent\PropertyBags\StringPropertyBag.cs" />
+    <Compile Include="Fluent\PropertyBags\TimeSpanPropertyBag.cs" />
     <Compile Include="Fluent\PropertyConfiguration.cs" />
+    <Compile Include="Helpers\AttributeHelper.cs" />
     <Compile Include="ValidationSummary.xaml.cs">
       <DependentUpon>ValidationSummary.xaml</DependentUpon>
     </Compile>
@@ -160,9 +166,7 @@
       <Generator>MSBuild:Compile</Generator>
     </Page>
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="Helpers\" />
-  </ItemGroup>
+  <ItemGroup />
   <PropertyGroup Condition=" '$(VisualStudioVersion)' == '' or '$(VisualStudioVersion)' &lt; '14.0' ">
     <VisualStudioVersion>14.0</VisualStudioVersion>
   </PropertyGroup>
