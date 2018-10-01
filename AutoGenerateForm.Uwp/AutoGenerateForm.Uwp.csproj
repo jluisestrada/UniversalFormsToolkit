@@ -110,6 +110,7 @@
     <!-- A reference to the entire .Net Framework and Windows SDK are automatically included -->
     <Compile Include="Fluent\Enums\ClockFormat.cs" />
     <Compile Include="Fluent\PropertyBags\AutoSuggestionPropertyBag.cs" />
+    <Compile Include="Fluent\PropertyBags\BooleanPropertyBag.cs" />
     <Compile Include="Fluent\PropertyBags\CollectionPropertyBag.cs" />
     <Compile Include="Fluent\CollectionPropertyConfiguration.cs" />
     <None Include="project.json" />
@@ -125,6 +126,7 @@
     <Compile Include="Fluent\EntityConfiguration.cs" />
     <Compile Include="Fluent\Helpers\ReflectionHelper.cs" />
     <Compile Include="Fluent\NumericPropertyConfiguration.cs" />
+    <Compile Include="Fluent\PropertyBags\DateTimePropertyBag.cs" />
     <Compile Include="Fluent\PropertyBags\EntityBag.cs" />
     <Compile Include="Fluent\PropertyBags\EntityPropertyBag.cs" />
     <Compile Include="Fluent\PropertyBags\NumericPropertyBag.cs" />

@@ -223,15 +223,15 @@ namespace AutoGenerateForm.Uwp
                 };
             }
 
-            //if (propertyType.Equals(typeof(DateTime)) || propertyType.Equals(typeof(DateTime?)))
-            //{
-                
-            //}
+            if (propertyType.Equals(typeof(DateTime)) || propertyType.Equals(typeof(DateTime?)))
+            {
+                bag = new DateTimePropertyBag(bag);
+            }
 
-            //if (propertyType.Equals(typeof(bool)) || propertyType.Equals(typeof(bool?)))
-            //{
-
-            //}
+            if (propertyType.Equals(typeof(bool)) || propertyType.Equals(typeof(bool?)))
+            {
+                bag = new BooleanPropertyBag(bag);
+            }
 
             if (propertyType.Equals(typeof(TimeSpan)) || propertyType.Equals(typeof(TimeSpan?)))
             {
